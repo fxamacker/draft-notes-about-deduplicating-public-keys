@@ -31,7 +31,9 @@ Updated goals based on newer mainnet data and clarification about RAM:
 
 In progress... (so far, all results are better than the stated goals).
 
-There were ~77 million duplicate payloads in the older mainnet snapshot, and migration reduced payload count by ~86 million payloads. (TODO: update this using latest Oct 2025 mainnet snapshot)
+The new data format is designed to allow us to reduce more payloads than the total number of duplicate payloads.
+
+Test results based on Oct 1, 2025 mainnet snapshot show there are ~77 million duplicate payloads and migration reduces payload count by over 86 million payloads (not a typo).
 
 Most accounts on mainnet only have 1 account key but they still use fewer bytes in the new data format.
 
@@ -41,7 +43,8 @@ Most accounts on mainnet only have 1 account key but they still use fewer bytes 
 
 - ### Efficiently Detecting Duplicates At Runtime
 
-- ### RLP++ Encoding (I don't know if I'm the first person to invent this encoding)
+- ### RLE++ Encoding (I don't know if I'm the first person to invent this encoding)
+  - RLE++ supports RLE ([run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding)) and adds another feature that can be used together in the same encoding.
 
 ## Results of Optimized Migration Speed
 
