@@ -67,3 +67,11 @@ This list is not exhaustive and it doesn't show time spent on design, getting fa
 Tests passed using older mainnet and testnet snapshots, but I test again when I need to get newer snapshots for something else. For example, here are some tests running last night using Oct 1, 2025 snapshot:
 
 <img width="3833" height="780" alt="image" src="https://github.com/user-attachments/assets/e3dc931d-6d95-4bb9-b0ce-c26843ec9cbf" />
+
+### Tests Used All Account Keys From Mainnet and Testnet
+
+From a storage and retrieval perpective, I tested [PR 7829](https://github.com/onflow/flow-go/pull/7829) for runtime public key handling with the same level of testing I used for the migration ([PR #7738](https://github.com/onflow/flow-go/pull/7738)).  I essentially round-trip tested every account key from both mainnet and testnet to get the expected results.
+
+During runtime tests, every account key from a mainnet and testnet snapshot were individually added and the stored results were compared to each corresponding account key that was stored in the original mainnet and testnet snapshot.
+
+These extra tests confirmed the deduplicated public keys provide access to all the same account key data that existed prior to deduplication, such as the individual weight and sequence number of each previously duplicate key.
