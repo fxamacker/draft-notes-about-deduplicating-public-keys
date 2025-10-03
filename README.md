@@ -10,30 +10,63 @@ Some accounts have many thousands of account keys with their own copy of the sam
 
 Each of these duplicate public keys are currently stored in their own payload (aka register), which creates overhead for databases, indexers, execution state, and any other component that handle payloads on Access Nodes, Execution Nodes, etc.
 
-## Stats
-
-In progress...
-
 ## Goals
 
-Initial goals:
+Our goal is to improve efficiency of databases, caches, indexers, MTrie, etc. that handle payloads on various nodes by reducing the number of payloads.
+
+Reducing the number of payloads also potentially benefits 3rd-party servers if they handle payloads.
+
+By improving resource utilization and gaining headroom to handle spikes in demand, etc. we can reduce risk of downtime and reduce operational costs.
+
+This project adds to the cumulative impact of reducing payload counts.  This project exceeded each of our quantifiable goals.
+
+<details><summary> 🔍 Expand for more detailed goals</summary>
+
+#### Initial goals:
 - remove ~46% of all public keys stored
 - reduce memory and storage used by ~19 GB
 - reduce registers stored by ~65M
 
-Updated goals based on newer mainnet data and clarification about RAM:
+#### Updated goals based on newer mainnet data and clarification about RAM:
 - remove ~48% of all public keys stored
 - reduce state size and disk used by ~20 GB each
 - reduce number of registers by ~68 million
 - reduce RAM used by EN is TBD after deployment to mainnet.  Memory use on Execution Nodes can sometimes reduce by ~3x state size reduction but that isn't guaranteed due to external factors like Go garbage collection, unrelated components/processes, OS page cache, etc.
 
-## Results
+</details>
 
-In progress... (so far, all results are better than the stated goals).
+## Results Based on October 1, 2025 Mainnet State
 
-Test results based on Oct 1, 2025 mainnet snapshot show there are ~77 million duplicate payloads and migration reduces payload count by over 86 million payloads (not a typo).
+NOTE: The new data format is designed to reduce payload count by more than the total number of duplicate keys.
+
+There are ~77.6 million duplicate payloads and migration reduces payload count by 86.1 million payloads (not a typo).
 
 Most accounts on mainnet only have 1 account key but they still use fewer bytes in the new data format.
+
+|                  | Reduction | Notes |
+| ---------------------- |--------| --- |
+| Public Keys | 77.6 million (53.1%) | better than our goal of 46-48% 🎉 |
+| Payloads (aka Registers) | 86.1 million (16%) | better than our goal of 65-68 million 🎉 |
+| MTrie Vertices | 210 million (16%) | matches expected 2x-3x payload count reduction 🎉 |
+| EN State Size | 28.8 GB (7.2%) | better than our goal of 19-20 GB 🎉 |
+| EN RAM Usage | TBD | never estimate this item, but it may be ~3x EN state size |
+| DB, caches, indexers, etc. | TBD | components handling payloads on AN, EN, etc.|
+
+<details><summary> 🔍 Expand for more details.</summary>
+
+|                  | Before | After | Reduction |
+| ---------------------- |--------|-------|------------|
+| Public Keys | 146,056,652 | 68,504,671 | 77,551,981 |
+| Payloads (aka Registers)   |  539,650,919 | 453,516,554 | 86,134,365 |
+| MTrie Vertices | 1,318,213,108 | 1,107,774,108 | 210,439,000 |
+| EN State Size (bytes) | 397,495,799,485 | 368,718,670,098 | 28,777,129,387 |
+| DBs, caches, indexers, etc. | | | TBD on AN, EN, etc. |
+
+EN state size reduction:
+- before: 131821310896 + 270947341117 = 397495799485 bytes
+- after: 110777410896 + 262372355730 = 368718670098 bytes
+
+</details>
 
 ## Design and Implementation
 
@@ -43,12 +76,13 @@ Additionally, I wanted to make the new data format support efficient runtime dup
 
 And since most accounts only have 1 account key (no duplicate public keys possible), the design special cases those accounts to avoid adding overhead.
 
-- ### Design of New Data Format
+### Design of New Data Format
 
-- ### Efficiently Detecting Duplicates At Runtime
+### Efficiently Detecting Duplicates At Runtime
 
-- ### RLE++ Encoding (I don't know if I'm the first person to invent this encoding)
-  - I named it RLE++ because it adds a feature to RLE ([run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding)) that also allows efficient encoding of non-repeating values created by using the ++ operator.
+### RLE++ Encoding (I don't know if I'm the first person to invent this encoding)
+
+I named it RLE++ because it adds a feature to RLE ([run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding)) that also allows efficient encoding of non-repeating values created by using the ++ operator.
 
 ## Results of Optimized Migration Speed
 
@@ -82,3 +116,4 @@ From a storage and retrieval perpective, I tested [PR 7829](https://github.com/o
 During runtime tests, every account key from a mainnet and testnet snapshot were individually added and the stored results were compared to each corresponding account key that was stored in the original mainnet and testnet snapshot.
 
 These extra tests confirmed the deduplicated public keys provide access to all the same account key data that existed prior to deduplication, such as the individual weight and sequence number of each previously duplicate key.
+
