@@ -35,7 +35,7 @@ This project adds to the cumulative impact of reducing payload counts.  This pro
 
 </details>
 
-## Results Based on October 1, 2025 Mainnet State
+## Results Based on October 1, 2025 Mainnet Checkpoint
 
 NOTE: The new data format is designed to reduce payload count by more than the total number of duplicate keys.
 
@@ -48,9 +48,10 @@ Most accounts on mainnet only have 1 account key but they still use fewer bytes 
 | Public Keys | 77.6 million (53.1%) | better than our goal of 46-48% 🎉 |
 | Payloads (aka Registers) | 86.1 million (16%) | better than our goal of 65-68 million 🎉 |
 | MTrie Vertices | 210 million (16%) | matches expected 2x-3x payload count reduction 🎉 |
-| EN State Size | 28.8 GB (7.2%) | better than our goal of 19-20 GB 🎉 |
-| EN RAM Usage | TBD | never estimate this item, but it may be ~3x EN state size |
-| DB, caches, indexers, etc. | TBD | components handling payloads on AN, EN, etc.|
+| MTrie Size | 28.8 GB (7.2%) | better than our goal of 19-20 GB 🎉 |
+| EN Checkpoint Size | 21.7 GB (6.2%) | better than our goal of 19-20 GB 🎉 |
+| EN RAM Usage | TBD | never estimate (can be affected by other changes) |
+| DB, caches, indexers, etc. | TBD | components handling payloads on AN, EN, etc. |
 
 <details><summary> 🔍 Expand for more details.</summary>
 
@@ -59,7 +60,9 @@ Most accounts on mainnet only have 1 account key but they still use fewer bytes 
 | Public Keys | 146,056,652 | 68,504,671 | 77,551,981 |
 | Payloads (aka Registers)   |  539,650,919 | 453,516,554 | 86,134,365 |
 | MTrie Vertices | 1,318,213,108 | 1,107,774,108 | 210,439,000 |
-| EN State Size (bytes) | 397,495,799,485 | 368,718,670,098 | 28,777,129,387 |
+| MTrie Size (bytes) | 397,495,799,485 | 368,718,670,098 | 28,777,129,387 |
+| EN Checkpoint Size (bytes) | 353,300,063,477 | 331,567,299,166 | 21,732,764,311 |
+| EN RAM Usage | TBD | TBD | never estimate (can be affected by other changes) |
 | DBs, caches, indexers, etc. | | | TBD on AN, EN, etc. |
 
 EN state size reduction:
@@ -67,6 +70,10 @@ EN state size reduction:
 - after: 110777410896 + 262372355730 = 368718670098 bytes
 
 </details>
+
+MTrie is the data structure containing the execution state. MTrie has vertices and payloads (atree and non-atree payloads). The migration optimizes a subset of non-atree payloads.
+
+If the EN RAM usage is reduced by less than the reduction in MTrie size, then it is likely that unrelated changes or activity is consuming extra RAM (vm configuration, OS page cache, db memory mapped files, updated components, etc.).
 
 ## Design and Implementation
 
@@ -80,9 +87,18 @@ And since most accounts only have 1 account key (no duplicate public keys possib
 
 ### Efficiently Detecting Duplicates At Runtime
 
+### Encoding Formats
+
+The new data format uses:
+- RLP encoding (for the data already encoded in RLP in the old format)
+- Raw bytes (for very simple new data where using a codec would be overkill)
+- RLE++ (for efficiently encoding both repeating values and non-repeating values)
+
 ### RLE++ Encoding (I don't know if I'm the first person to invent this encoding)
 
-I named it RLE++ because it adds a feature to RLE ([run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding)) that also allows efficient encoding of non-repeating values created by using the ++ operator.
+The new data format uses a new encoding called RLE++ to efficiently encode both repeating values and non-repeating values in the same encoding.
+
+I named it RLE++ because it adds a feature to RLE ([run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding)) that supports efficient encoding of non-repeating values created by using the ++ operator (incrementing values).
 
 ## Results of Optimized Migration Speed
 
@@ -116,4 +132,3 @@ From a storage and retrieval perpective, I tested [PR 7829](https://github.com/o
 During runtime tests, every account key from a mainnet and testnet snapshot were individually added and the stored results were compared to each corresponding account key that was stored in the original mainnet and testnet snapshot.
 
 These extra tests confirmed the deduplicated public keys provide access to all the same account key data that existed prior to deduplication, such as the individual weight and sequence number of each previously duplicate key.
-
