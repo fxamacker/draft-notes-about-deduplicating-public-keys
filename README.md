@@ -71,7 +71,7 @@ EN state size reduction:
 
 </details>
 
-MTrie is the data structure containing the execution state. MTrie has vertices and payloads (atree and non-atree payloads). The migration optimizes a subset of non-atree payloads.
+MTrie is the data structure containing the execution state. MTrie has vertices and payloads (atree and non-atree payloads). The migration doesn't modify atree payloads and only optimizes a subset of non-atree payloads.
 
 If the EN RAM usage is reduced by less than the reduction in MTrie size, then it is likely that unrelated changes or activity is consuming extra RAM (vm configuration, OS page cache, db memory mapped files, updated components, etc.).
 
