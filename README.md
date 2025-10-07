@@ -6,9 +6,21 @@ Each account is allowed to have multiple account keys.  An account key is the co
 
 Currently, when an account uses the same public key in multiple account keys, each account key stores its own copy of the same public key instead of using a shared immutable copy.
 
-Some accounts have many thousands of account keys with their own copy of the same public key.  For example, one account on mainnet has just one unique public key and over 146K account keys storing their own full copy of the same public key.
+Some accounts have thousands of account keys with their own copy of the same public key.  However, most accounts only have 1 account key and some accounts with thousands of account keys don't have any duplicate public keys.
 
-Each of these duplicate public keys are currently stored in their own payload (aka register), which creates overhead for databases, indexers, execution state, and any other component that handle payloads on Access Nodes, Execution Nodes, etc.
+Each duplicate public key is stored in its own payload (aka register), which creates overhead for databases, indexers, execution state (MTrie), and any other component that handle payloads on Access Nodes, Execution Nodes, etc.
+
+As just one example of overhead, each payload (regardless of its size) requires roughly 2-3 MTrie vertices containing hashes. MTrie vertices are 96 bytes each, so this overhead by itself can be larger than some payloads.  Other components and servers may have different types of overhead incurred by payloads (e.g., hash computations, etc.).
+
+## Scope
+
+This project optimizes non-atree payloads to reduce the total number of payloads.  Specifically, this project only modifies a subset of non-atree payloads (account status and public key).
+
+Migration optimizes the existing payloads during spork.  Accounts that only have 1 account key (most mainnet accounts) cannot have duplicates, but they use a few bytes less in the new data format.
+
+Runtime optimizes new payloads by detecting duplicate pubic keys being added, and will store them in the new deduplicated format.  Unlike migration, runtime duplicate key detection is not 100% as a tradeoff for faster speed and more efficient storage overall.
+
+NOTE:  To avoid sacrificing speed, this project does not use compression libraries (e.g., LZ4, zstd, etc.).
 
 ## Goals
 
@@ -71,9 +83,11 @@ EN state size reduction:
 
 </details>
 
-MTrie is the data structure containing the execution state. MTrie has vertices and payloads (atree and non-atree payloads). The migration doesn't modify atree payloads and only optimizes a subset of non-atree payloads.
+MTrie is the in-memory data structure containing the execution state. MTrie has vertices and payloads (atree and non-atree payloads).
 
-If the EN RAM usage is reduced by less than the reduction in MTrie size, then it is likely that unrelated changes or activity is consuming extra RAM (vm configuration, OS page cache, db memory mapped files, updated components, etc.).
+This project only modifies non-atree payloads (account status and public key payloads).
+
+If the Execution Nodes (Servers) RAM usage are reduced by less than the reduction in MTrie size, then it is likely that unrelated changes or activity is consuming extra RAM (vm configuration, OS page cache, db memory mapped files, updated components, etc.).  For example, some types of garbage collectors and databases might hold on to more RAM (to improve performance) if they detect more free RAM is available.
 
 ## Design and Implementation
 
