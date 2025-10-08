@@ -4,15 +4,17 @@ TODO: Change "we" to the name of the system in the blog after checking if this t
 
 ## How We Cut 210M Cryptographic Hashes With Account Key Deduplication
 
-By optimizing how we store account keys, we reduced execution state size by 28.8 GB, 7.2 percent of the entire execution state. Perhaps more importantly, we did this by immediately reducing the total number of payloads, and while at it we also reduced the rate of growth for the ever-growing payload count.
-
-To put what we achieved into perspective, we found 77.6 million payloads with duplicate keys, but we reduced the number of payloads by 86.1 million without using compression (not a typo)!
+By optimizing how we store account keys, we reduced execution state size by 28.8 GB (over 7 percent of the entire execution state). Perhaps more importantly, we did this by reducing the total number of payloads, and we also reduced the payload count's growth rate.
 
 Reducing payload count matters because each payload can add different overhead (cpu, ram, disk, network) to different types of servers running databases, caches, execution state, indexers, etc. that handle payloads in various ways.
 
-As one example, MTrie (the execution state), uses 2-3 trie vertices (192-288 bytes) for each payload, and that overhead is larger than the 72-78 byte payload sizes for account keys. We eliminated over 210 million Mtrie vertices containing cryptographic hashes we don't need anymore, by reducing the number of payloads by 86.1 million.
+As one example, MTrie (the execution state), uses 2-3 trie vertices (192-288 bytes) for each payload, and that overhead is larger than the 72-78 byte payload sizes of account keys.  We eliminated over 210 million Mtrie vertices containing cryptographic hashes we don't need anymore, by reducing the number of payloads by 86.1 million.
 
-Reducing payload counts and their overhead helps reduce hardware costs and energy consumption on servers that handle payloads. Memory use reduction on AN, EN, etc. are hard to measure since we are deploying unrelated projects at the same time, but we know we are loading 28.8 GB less execution state into RAM on EN and memory usage reduction in a prior project was reported to be a multiple of the state size reduction.
+To put what we achieved into perspective, we found 77.6 million payloads with duplicate keys, but our improved data format reduces the number of payloads by 86.1 million without using compression (not a typo)!
+
+These incremental improvements have a cumulative impact on operational costs, uptime, and performance.  Although payload count increases daily, Execution Nodes (EN), etc. can handle more payloads now compared to 9 months ago, without adding extra RAM because there are fewer payloads now.
+
+Reducing payload counts and their overhead helps reduce hardware costs and energy consumption on various servers that handle payloads.  By improving resource utilization, we gain headroom to handle increased spikes in demand, reduce downtime, and reduce costs.  Memory use reduction on AN, EN, etc. are hard to measure since we are deploying unrelated projects at the same time, but we know we are loading 28.8 GB less execution state into RAM on EN, and memory usage reduction on EN in a prior migration project was reported to be a multiple of the state size reduction.
 
 At the same time, the change does not take anything away from end users. [...]
 
