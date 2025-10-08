@@ -14,7 +14,7 @@ As one example, MTrie (the execution state), uses 2-3 trie vertices (192-288 byt
 
 Reducing payload counts and their overhead helps reduce hardware costs and energy consumption on servers that handle payloads. Memory use reduction on AN, EN, etc. are hard to measure since we are deploying unrelated projects at the same time, but we know we are loading 28.8 GB less execution state into RAM on EN and memory usage reduction in a prior project was reported to be a multiple of the state size reduction.
 
-At the same time, the change does not take anything away from end users. Multi-key accounts remain as flexible as before, and applications that rely on duplicate keys for managing multiple in-flight transactions continue to work exactly as expected.
+At the same time, the change does not take anything away from end users. [...]
 
 ### MY NOTES
 
