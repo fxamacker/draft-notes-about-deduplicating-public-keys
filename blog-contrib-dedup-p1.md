@@ -6,7 +6,7 @@ TODO: Change "we" to the name of the system in the blog after checking if this t
 
 By optimizing how we store account keys, we reduced execution state size by 28.8 GB, 7.2 percent of the entire execution state. Perhaps more importantly, we did this by immediately reducing the total number of payloads, and while at it we also reduced the rate of growth for the ever-growing payload count.
 
-To put what we achieved into perspective, we found 77.6 million payloads with duplicate keys, but we reduced the number of payloads by 86.1 million without using compression (not a typo)! We beat the beat the best case scenario in the area that matters.
+To put what we achieved into perspective, we found 77.6 million payloads with duplicate keys, but we reduced the number of payloads by 86.1 million without using compression (not a typo)! We beat the best case scenario in the area that matters.
 
 Reducing payload count matters because each payload can add different overhead (cpu, ram, disk, network) to different types of servers running databases, caches, execution state, indexers, etc. that handle payloads in various ways.
 
