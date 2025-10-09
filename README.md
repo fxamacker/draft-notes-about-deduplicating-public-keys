@@ -1,16 +1,20 @@
 # draft-notes-about-deduplicating-public-keys
 
-## Introduction
+## How We Reduced Payload Count to Cut 210M Hashes and 29 GB of State
 
-Each account is allowed to have multiple account keys.  An account key is the combination of a public key and associated data such as revoked status, weight, and sequence number.
+By optimizing how we store account keys, we reduced execution state size by 28.8 GB (over 7 percent of the entire execution state). Perhaps more importantly, we did this by reducing the number of payloads, and we also reduced the payload count's growth rate.
 
-Currently, when an account uses the same public key in multiple account keys, each account key stores its own copy of the same public key instead of using a shared immutable copy.
+Reducing the number of payloads matters because each payload adds different overhead (cpu, ram, disk, network) to different types of servers running databases, caches, execution state, indexers, etc. that handle payloads.
 
-Some accounts have thousands of account keys with their own copy of the same public key.  However, most accounts only have 1 account key and some accounts with thousands of account keys don't have any duplicate public keys.
+As just one example, MTrie (the execution state) incurs 192-288 bytes of overhead for each 72-78 byte payload that held an account key.  The overhead is larger than the payload size because each payload requires about 2-3 MTrie vertices (96 bytes each).  We reduced enough payloads for us to no longer need 210 million cryptographic hashes and the MTrie vertices containing them.
 
-Each duplicate public key is stored in its own payload (aka register), which creates overhead for databases, indexers, execution state (MTrie), and any other component that handle payloads on Access Nodes, Execution Nodes, etc.
+To put what we achieved into perspective, we found 77.6 million payloads with duplicate keys, but our improved data format reduces the number of payloads by 86.1 million without using compression (not a typo)!
 
-As just one example of overhead, each payload (regardless of its size) requires roughly 2-3 MTrie vertices containing hashes. MTrie vertices are 96 bytes each, so this overhead by itself can be larger than some payloads.  Other components and servers may have different types of overhead incurred by payloads (e.g., hash computations, etc.).
+These incremental improvements add up to have a cumulative impact on operational costs, uptime, and performance.  Although payload count increases daily, Execution Nodes, etc. can handle more payloads now compared to 9 months ago, without adding extra RAM.
+
+Beyond Execution Nodes, reducing payload counts and their overhead helps reduce hardware costs and energy consumption on various servers that handle payloads.  By improving resource utilization, we gain headroom to handle increased spikes in demand, reduce downtime, and reduce costs.  Memory use reduction on AN, EN, etc. are hard to measure since we are deploying unrelated projects at the same time, but we know we are loading 28.8 GB less execution state into RAM on EN, and memory usage reduction on EN in a prior migration project was reported to be a multiple of the state size reduction.
+
+At the same time, the change does not take anything away from end users. [...]
 
 ## Scope
 
