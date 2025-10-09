@@ -2,19 +2,19 @@ WARNING:  This is my WIP notes and it may contain mistakes.
 
 TODO: Change "we" to the name of the system in the blog after checking if this text is acceptable. Round the results like 28.8 GB after updating them (migrate a newer mainnet snapshot before the blog and run extra tests again while newer stats are being extracted).
 
-## How We Cut 210M Cryptographic Hashes With Account Key Deduplication
+## How We Reduced Payload Count to Cut 210M Hashes and 29 GB of State
 
-By optimizing how we store account keys, we reduced execution state size by 28.8 GB (over 7 percent of the entire execution state). Perhaps more importantly, we did this by reducing the total number of payloads, and we also reduced the payload count's growth rate.
+By optimizing how we store account keys, we reduced execution state size by 28.8 GB (over 7 percent of the entire execution state). Perhaps more importantly, we did this by reducing the number of payloads, and we also reduced the payload count's growth rate.
 
-Reducing payload count matters because each payload can add different overhead (cpu, ram, disk, network) to different types of servers running databases, caches, execution state, indexers, etc. that handle payloads in various ways.
+Reducing the number of payloads matters because each payload adds different overhead (cpu, ram, disk, network) to different types of servers running databases, caches, execution state, indexers, etc. that handle payloads.
 
-As one example, MTrie (the execution state), uses 2-3 trie vertices (192-288 bytes) for each payload, and that overhead is larger than the 72-78 byte payload sizes of account keys.  We eliminated over 210 million Mtrie vertices containing cryptographic hashes we don't need anymore, by reducing the number of payloads by 86.1 million.
+As just one example, MTrie (the execution state) incurs 192-288 bytes of overhead for each 72-78 byte payload that held an account key.  The overhead is larger than the payload size because each payload requires about 2-3 MTrie vertices (96 bytes each).  We reduced enough payloads for us to no longer need 210 million cryptographic hashes and the MTrie vertices containing them.
 
 To put what we achieved into perspective, we found 77.6 million payloads with duplicate keys, but our improved data format reduces the number of payloads by 86.1 million without using compression (not a typo)!
 
-These incremental improvements have a cumulative impact on operational costs, uptime, and performance.  Although payload count increases daily, Execution Nodes (EN), etc. can handle more payloads now compared to 9 months ago, without adding extra RAM because there are fewer payloads now.
+These incremental improvements add up to have a cumulative impact on operational costs, uptime, and performance.  Although payload count increases daily, Execution Nodes, etc. can handle more payloads now compared to 9 months ago, without adding extra RAM.
 
-Reducing payload counts and their overhead helps reduce hardware costs and energy consumption on various servers that handle payloads.  By improving resource utilization, we gain headroom to handle increased spikes in demand, reduce downtime, and reduce costs.  Memory use reduction on AN, EN, etc. are hard to measure since we are deploying unrelated projects at the same time, but we know we are loading 28.8 GB less execution state into RAM on EN, and memory usage reduction on EN in a prior migration project was reported to be a multiple of the state size reduction.
+Beyond Execution Nodes, reducing payload counts and their overhead helps reduce hardware costs and energy consumption on various servers that handle payloads.  By improving resource utilization, we gain headroom to handle increased spikes in demand, reduce downtime, and reduce costs.  Memory use reduction on AN, EN, etc. are hard to measure since we are deploying unrelated projects at the same time, but we know we are loading 28.8 GB less execution state into RAM on EN, and memory usage reduction on EN in a prior migration project was reported to be a multiple of the state size reduction.
 
 At the same time, the change does not take anything away from end users. [...]
 
