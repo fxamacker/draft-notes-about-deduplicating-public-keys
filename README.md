@@ -1,6 +1,6 @@
 # draft-notes-about-deduplicating-public-keys
 
-## How We Reduced Payload Count to Cut 210M Hashes and 29 GB of State
+## How We Reduced Payload Count to Cut 211M Hashes and 29 GB of State
 
 By optimizing how we store account keys, we reduced execution state size by 28.8 GB (over 7 percent of the entire execution state). Perhaps more importantly, we did this by reducing the number of payloads, and we also reduced the payload count's growth rate.
 
@@ -13,6 +13,8 @@ To put what we achieved into perspective, we found 77.6 million payloads with du
 These incremental improvements add up to have a cumulative impact on operational costs, uptime, and performance.  Although payload count increases daily, Execution Nodes, etc. can handle more payloads now compared to 9 months ago, without adding extra RAM.
 
 Beyond Execution Nodes, reducing payload counts and their overhead helps reduce hardware costs and energy consumption on various servers that handle payloads.  By improving resource utilization, we gain headroom to handle increased spikes in demand, reduce downtime, and reduce costs.  Memory use reduction on AN, EN, etc. are hard to measure since we are deploying unrelated projects at the same time, but we know we are loading 28.8 GB less execution state into RAM on EN, and memory usage reduction on EN in a prior migration project was reported to be a multiple of the state size reduction.
+
+UPDATE: Memory use reduction is still about -150 GB less RAM on each EN server about 7 days after the Oct. 22, 2025 mainnet spork.  This is over 5x MTrie size reduction! 🎉
 
 At the same time, the change does not take anything away from end users. [...]
 
@@ -50,6 +52,61 @@ This project adds to the cumulative impact of reducing payload counts.  This pro
 - reduce RAM used by EN is TBD after deployment to mainnet.  Memory use on Execution Nodes can sometimes reduce by ~3x state size reduction but that isn't guaranteed due to external factors like Go garbage collection, unrelated components/processes, OS page cache, etc.
 
 </details>
+
+## Actual Results (Oct. 22, 2025 Mainnet Spork)
+
+|                  | Reduction | Notes |
+| ---------------------- |--------| --- |
+| Public Keys | 77.6 million (53.1%) | better than our goal of 46-48% 🎉 |
+| Payloads (aka Registers) | 86.1 million (16%) | better than our goal of 65-68 million 🎉 |
+| Payload Size | 8.9 GB | not estimated but better than private expectations 🎉 |
+| MTrie Vertices | 210 million (16%) | matches expected 2x-3x payload count reduction 🎉 |
+| MTrie Size | 28.8 GB (7.2%) | better than our goal of 19-20 GB 🎉 |
+| EN Checkpoint Size | 21.7 GB (6.2%) | better than our goal of 19-20 GB 🎉 |
+| EN RAM Usage | ~150 GB | not estimated but better than private expectations 🎉 |
+| DB, caches, indexers, etc. | TBD | components handling payloads on AN, EN, etc. |
+
+The ~150 GB RAM reduction on each EN server (7 days after spork as of today) exceeded expectations.
+
+Speedup is also better than expected, but multiple changes were deployed at the same time, so it is hard to separate.
+
+<details><summary> 🔍 Expand for details</summary>
+
+#### Mainnet Spork (Oct. 22, 2025)
+
+NOTE: After spork, the reverse migration test result (new -> old) matched the regular migration (old -> new) result.
+
+MTrie size reduction (bytes):
+- payloads: 8587120345
+- vertices: 20226276288
+- total: 28813396633 (28.8 GB)
+
+Checkpoint file size:
+- old format: 354914430454 bytes (created by reverse migration from new -> old for comparison)
+- new format: 333167435599 bytes
+- reduction: 21746994855 bytes (27.1 GB)
+
+MTrie node (aka vertex) count:
+- before: 1323678476
+- after: 1112988098
+- count reduction: 210690378 (211M cryptographic hashes!)
+- size reduction (count * 96 bytes): 20226276288
+
+Payload count:
+- before: 541888998
+- after: 455650954
+- reduction: 86238044
+
+Payload size:
+- before: 272233935818
+- after: 263646815473
+- reduction (bytes): 8587120345
+
+</details>
+
+### Migration Speed
+
+The key deduplication part of the migration only took 5m36s using `nworkers=10` on m1 (within the longer running common migration framework of loading/saving checkpoints, etc. which unchanged from prior migrations).  The speed of migration in pre-spork tests using `nworkers=64` allowed us to use m1 instead of m3 server for the mainnet spork on Oct. 22, 2025 🎉.
 
 ## Results Based on October 1, 2025 Mainnet Checkpoint
 
